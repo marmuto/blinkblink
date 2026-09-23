@@ -1,12 +1,13 @@
 # Notification Center — blinkblink
 
 A fork of [jankeesvw/omarchy-notification-center](https://github.com/jankeesvw/omarchy-notification-center)
-by Jankees van Woezik, with one change: the unread dot on the bell is a hard
-red that blinks on and off at the terminal cursor's rate, instead of the
-theme-coloured dot that fades in and out.
+by Jankees van Woezik, with one change: while something is unread the bell
+itself turns hard red and blinks on and off at the terminal cursor's rate,
+instead of a theme-coloured dot fading in and out beside it. There is no
+separate dot.
 
 An [Omarchy](https://omarchy.org) bar widget that keeps the notifications you
-were sent. A bell on the right of the bar, a red dot blinking on it when
+were sent. A bell on the right of the bar that turns hard red and blinks when
 something has come in, and a panel of everything you were told, still there
 tomorrow.
 

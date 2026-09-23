@@ -451,6 +451,25 @@ Panel {
     // different pictures of one state.
     text: root.dnd ? "\uDB80\uDC9B" : "\uDB80\uDC9A"
     dimmed: root.dnd
+    // The bell itself is the unread marker now: solid hard red, blinking on
+    // and off at the terminal cursor's rate (foot: blink-rate=250, kitty:
+    // cursor_blink_interval 0.25). The colour's alpha is what animates, not
+    // the button's opacity, so the button keeps its own dimming under DND and
+    // the bar's own reveal logic is left alone.
+    property real blinkPhase: 1.0
+    active: root.unread > 0 && root.badge !== "None"
+    activeColor: Qt.rgba(1.0, 59 / 255, 48 / 255,
+                         root.badge === "Dot" ? blinkPhase : 1.0)
+
+    SequentialAnimation {
+      running: root.unread > 0 && root.badge === "Dot"
+      loops: Animation.Infinite
+      PropertyAction { target: button; property: "blinkPhase"; value: 1.0 }
+      PauseAnimation { duration: 250 }
+      PropertyAction { target: button; property: "blinkPhase"; value: 0.0 }
+      PauseAnimation { duration: 250 }
+    }
+
     tooltipText: {
       if (root.dnd) return root.unread > 0
         ? "Silenced · " + root.unread + " new" : "Notifications silenced"
@@ -480,36 +499,6 @@ Panel {
     x: 1000000
     width: 1
     visible: false
-  }
-
-  // The unread marker, drawn over the bell rather than beside it: a bar that
-  // changes width every time a message arrives is a bar that twitches all day.
-  // Red and pulsing while something is unread, so it reads as "look here" at a
-  // glance instead of as one more piece of decoration.
-  Rectangle {
-    id: dot
-    visible: root.badge === "Dot" && root.unread > 0
-    anchors.right: button.right
-    anchors.rightMargin: Style.space(3)
-    anchors.top: button.top
-    anchors.topMargin: Style.space(5)
-    width: Style.space(6)
-    height: width
-    radius: width / 2
-    color: "#ff3b30"
-
-    // Hard red with a hard on/off blink, at the terminal cursor's rate
-    // (foot: blink-rate=250, kitty: cursor_blink_interval 0.25): this is an
-    // alarm, not a decoration, so it snaps rather than fades. Stops with the
-    // dot.
-    SequentialAnimation {
-      running: dot.visible
-      loops: Animation.Infinite
-      PropertyAction { target: dot; property: "opacity"; value: 1.0 }
-      PauseAnimation { duration: 250 }
-      PropertyAction { target: dot; property: "opacity"; value: 0.0 }
-      PauseAnimation { duration: 250 }
-    }
   }
 
   Rectangle {
