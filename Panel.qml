@@ -43,7 +43,7 @@ Panel {
 
   // ----------------------------------------------------------------- settings
 
-  readonly property int panelWidth: setting("panelWidth", 420)
+  readonly property int panelWidth: setting("panelWidth", 520)
   readonly property int listHeight: setting("listHeight", 0)
   readonly property string badge: setting("badge", "Dot")
   readonly property int keepDays: setting("keepDays", 30)
@@ -56,7 +56,7 @@ Panel {
   // how far back the list scrolls before it stops, and it is a list you scan
   // rather than page through. Anything older is still on disk and still
   // searchable from the command line.
-  readonly property int pageSize: 500
+  readonly property int pageSize: 10
 
   // ------------------------------------------------------------- the service
   //
@@ -112,6 +112,40 @@ Panel {
       else break   // newest first, so the first read one ends it
     }
     return count
+  }
+
+  // The unread marker is a dot, and a dot has no shape to distinguish one day
+  // from another, so the colour is what carries the difference. These are the
+  // five it wears, and which one is up is drawn at random. Kept bright on
+  // purpose: a marker that has to be told apart from the bar behind it should
+  // not be subtle about it.
+  readonly property var dotColors: [
+    "#ff2d2d",  // red
+    "#ffd60a",  // yellow
+    "#00e676",  // green
+    "#00b0ff",  // blue
+    "#d500f9"   // magenta
+  ]
+  property int dotColorIndex: 0
+  readonly property color dotColor: dotColors[dotColorIndex % dotColors.length]
+
+  function pickDotColor() {
+    var next = Math.floor(Math.random() * dotColors.length)
+    // Never the same colour twice in a row, so every pulse reads as a new one
+    // even when the draw would have repeated itself.
+    if (next === dotColorIndex) next = (next + 1) % dotColors.length
+    dotColorIndex = next
+  }
+
+  // While something is unread the dot keeps changing colour, and it lands on a
+  // new one as each pulse comes back up. The interval is the pulse below: the
+  // light and the colour are the same heartbeat.
+  Timer {
+    interval: 600
+    running: root.unread > 0
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: root.pickDotColor()
   }
 
   Timer {
@@ -442,33 +476,59 @@ Panel {
     anchors.bottom: parent.bottom
     bar: root.bar
 
-    // A bell, and a bell with a line through it while notifications are
-    // silenced. The second is the same glyph the shell's own DND indicator
-    // uses, so the bar never shows two different pictures of one state.
-    // U+F009B (bell-off) and U+F009A (bell), written as surrogate pairs so the
-    // source survives editors that mangle private-use codepoints. The first is
-    // the glyph the shell's own DND indicator uses, so the bar never shows two
-    // different pictures of one state.
-    text: root.dnd ? "\uDB80\uDC9B" : "\uDB80\uDC9A"
-    dimmed: root.dnd
-    // The bell itself is the unread marker now: solid hard red, blinking on
-    // and off at the terminal cursor's rate (foot: blink-rate=250, kitty:
-    // cursor_blink_interval 0.25). The colour's alpha is what animates, not
-    // the button's opacity, so the button keeps its own dimming under DND and
-    // the bar's own reveal logic is left alone.
-    property real blinkPhase: 1.0
-    active: root.unread > 0 && root.badge !== "None"
-    activeColor: Qt.rgba(1.0, 59 / 255, 48 / 255,
-                         root.badge === "Dot" ? blinkPhase : 1.0)
+    // The bell is gone, replaced by a dot: a mark with nothing to read on it,
+    // so the colour it lights up in is the whole message. Five of them, drawn
+    // at random, and it is the draw that is different every time rather than
+    // the dot.
+    //
+    // The dot is always there. With nothing unread it sits in the bar's own
+    // foreground at low alpha, quiet and easy to ignore; with something unread
+    // it comes up in one of the five and breathes, so idle and unread are told
+    // apart by light and not only by hue. Under DND the button dims it, the
+    // same as the bar dims everything else that has been silenced.
+    iconComponent: Component {
+      Item {
+        anchors.fill: parent
 
-    SequentialAnimation {
-      running: root.unread > 0 && root.badge === "Dot"
-      loops: Animation.Infinite
-      PropertyAction { target: button; property: "blinkPhase"; value: 1.0 }
-      PauseAnimation { duration: 250 }
-      PropertyAction { target: button; property: "blinkPhase"; value: 0.0 }
-      PauseAnimation { duration: 250 }
+        // A halo only while there is something to read, which is what makes
+        // the lit state read as lit from across the bar.
+        Rectangle {
+          anchors.centerIn: parent
+          width: Style.space(16)
+          height: width
+          radius: width / 2
+          visible: root.unread > 0
+          color: root.dotColor
+          opacity: 0.28
+        }
+
+        Rectangle {
+          id: dot
+          anchors.centerIn: parent
+          width: Style.space(10)
+          height: width
+          radius: width / 2
+          color: root.unread > 0
+            ? root.dotColor
+            : Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.30)
+
+          // The lit dot breathes, and the colour lands on the way back up.
+          // Bound through `pulse` instead of animated on `opacity` directly,
+          // so the dot returns to solid the moment nothing is unread.
+          property real pulse: 1.0
+          opacity: root.unread > 0 ? pulse : 1.0
+
+          SequentialAnimation on pulse {
+            running: root.unread > 0
+            loops: Animation.Infinite
+            NumberAnimation { from: 1.0; to: 0.25; duration: 300; easing.type: Easing.InOutSine }
+            NumberAnimation { from: 0.25; to: 1.0; duration: 300; easing.type: Easing.InOutSine }
+          }
+        }
+      }
     }
+    dimmed: root.dnd
+    active: root.unread > 0 && root.badge !== "None"
 
     tooltipText: {
       if (root.dnd) return root.unread > 0
@@ -728,6 +788,7 @@ Panel {
               text: daySection.section.toUpperCase()
               foreground: root.foreground
               fontFamily: root.fontFamily
+              fontSize: Math.round(Style.font.caption * 1.5)
             }
           }
 
@@ -771,7 +832,7 @@ Panel {
               : "Nothing has come in yet"
           wrapMode: Text.WordWrap
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Math.round(Style.font.caption * 1.5)
           color: root.foreground
           opacity: 0.55
         }
@@ -789,7 +850,7 @@ Panel {
             ? "1 notification kept"
             : root.entries.length + " notifications kept \u00b7 " + root.keepDays + " days"
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Math.round(Style.font.caption * 1.5)
           color: root.foreground
           opacity: 0.4
         }

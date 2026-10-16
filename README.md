@@ -1,15 +1,15 @@
 # Notification Center — blinkblink
 
 A fork of [jankeesvw/omarchy-notification-center](https://github.com/jankeesvw/omarchy-notification-center)
-by Jankees van Woezik, with one change: while something is unread the bell
-itself turns hard red and blinks on and off at the terminal cursor's rate,
-instead of a theme-coloured dot fading in and out beside it. There is no
-separate dot.
+by Jankees van Woezik, with one change: the unread marker is a dot the widget
+draws itself, and it pulses while something is unread, taking a new one of
+five bright colours on every pulse, instead of a theme-coloured dot fading in
+and out beside the bell.
 
 An [Omarchy](https://omarchy.org) bar widget that keeps the notifications you
-were sent. A bell on the right of the bar that turns hard red and blinks when
-something has come in, and a panel of everything you were told, still there
-tomorrow.
+were sent. A dot on the right of the bar that lights up in one of five bright
+colours, picked at random and changed with every pulse while something has
+come in, and a panel of everything you were told, still there tomorrow.
 
 Omarchy shows a notification once. This answers the question that comes ten
 minutes later, in the middle of something else: *what did that say?*
@@ -22,9 +22,9 @@ minutes later, in the middle of something else: *what did that say?*
 omarchy plugin add https://github.com/marmuto/blinkblink.git --enable
 ```
 
-Needs `jq` and `inotifywait`, both of which Omarchy already has. Leave the bell
+Needs `jq` and `inotifywait`, both of which Omarchy already has. Leave the dot
 at the far right of the bar: the panel is pinned to the right edge of the
-screen, so a bell in the middle is a bell whose panel opens somewhere else.
+screen, so a dot in the middle is a dot whose panel opens somewhere else.
 
 ## What it does
 
@@ -44,7 +44,7 @@ icon and all, and keeps it for 30 days.
 - **The × on a card**, or a right-click, removes one. **Clear** empties the
   archive and asks twice.
 - **The bell in the header** is Do Not Disturb, the same switch as the bar's.
-  Right-clicking the bell in the bar does it without opening anything.
+  Right-clicking the dot in the bar does it without opening anything.
 - **The magnifier**, or `/`, searches everything kept. Escape leaves the
   search, Escape again closes the panel.
 
@@ -52,7 +52,7 @@ icon and all, and keeps it for 30 days.
 
 | Setting | Default | |
 | --- | --- | --- |
-| Mark what you have not read | Dot | `Dot`, `Count` or `None` on the bell. |
+| Mark what you have not read | Dot | `Dot`, `Count` or `None` on the dot. |
 | Keep notifications for | 30 days | Older than this is deleted, icon and all. |
 | Keep at most | 1000 | A ceiling regardless of age. |
 | Clicking a notification | Auto | Opens the picture, or focuses the app. Or neither. |
