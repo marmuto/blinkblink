@@ -39,11 +39,6 @@ Item {
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
 
-  // User customization: larger text in the notification-center panel.
-  readonly property real panelTextScale: 1.5
-  readonly property int metaFontSize: Math.round(Style.font.caption * panelTextScale)
-  readonly property int messageFontSize: Math.round(Style.font.body * panelTextScale)
-
   signal clicked()
   signal removeRequested()
 
@@ -174,7 +169,7 @@ Item {
         visible: !root.hasIcon && root.glyph === ""
         text: root.initial
         font.family: root.fontFamily
-        font.pixelSize: root.metaFontSize
+        font.pixelSize: Style.font.caption
         font.bold: true
         color: root.foreground
         opacity: 0.7
@@ -186,7 +181,7 @@ Item {
         visible: !root.hasIcon && root.glyph !== ""
         text: root.glyph
         font.family: root.fontFamily
-        font.pixelSize: Math.round(Style.font.icon * root.panelTextScale)
+        font.pixelSize: Style.font.icon
         color: root.foreground
         opacity: 0.8
       }
@@ -230,7 +225,7 @@ Item {
           text: root.app
           elide: Text.ElideRight
           font.family: root.fontFamily
-          font.pixelSize: root.metaFontSize
+          font.pixelSize: Style.font.caption
           color: root.foreground
           opacity: 0.5
         }
@@ -245,7 +240,7 @@ Item {
           visible: !root.hovered
           text: root.when
           font.family: root.fontFamily
-          font.pixelSize: root.metaFontSize
+          font.pixelSize: Style.font.caption
           color: root.foreground
           opacity: 0.45
         }
@@ -270,7 +265,7 @@ Item {
             // everybody reads as "close".
             text: "×"
             font.family: root.fontFamily
-            font.pixelSize: root.metaFontSize
+            font.pixelSize: Style.font.caption
             color: root.foreground
             opacity: 0.8
           }
@@ -294,7 +289,7 @@ Item {
         elide: Text.ElideRight
         maximumLineCount: 1
         font.family: root.fontFamily
-        font.pixelSize: root.messageFontSize
+        font.pixelSize: Style.font.body
         font.bold: true
         color: root.foreground
       }
@@ -311,7 +306,7 @@ Item {
         elide: Text.ElideRight
         maximumLineCount: 2
         font.family: root.fontFamily
-        font.pixelSize: root.messageFontSize
+        font.pixelSize: Style.font.caption
         color: root.foreground
         opacity: 0.75
       }
